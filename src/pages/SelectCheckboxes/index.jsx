@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './index.scoped.scss';
 
 const getMockData = (count) =>
@@ -8,11 +8,14 @@ const getMockData = (count) =>
     disabled: !!Math.floor(Math.random() * 2),
   }));
 
+const INITIAL_DATA_COUNT = 30;
+const CHECKBOX = { CHECKED: 'checked', INDETERMINATE: 'indeterminate' };
+
 /**
  * Shift + click to select checkboxes
  */
 const SelectCheckboxes = () => {
-  const [initialDataCount, setInitialDataCount] = useState(30);
+  const [initialDataCount, setInitialDataCount] = useState(INITIAL_DATA_COUNT);
   const [dataList, setDataList] = useState(getMockData(initialDataCount));
   const [selectedRowKeys, setSelectedRowKeys] = useState(
     dataList.filter((item) => item.selected).map((item) => item.id)
@@ -58,16 +61,21 @@ const SelectCheckboxes = () => {
   };
 
   const handleSelectAll = () => {
-    const isAllSelected = selectedRowKeys.length === dataList.length;
-    const newSelectedRowKeys = isAllSelected ? [] : dataList.map((item) => item.id);
+    const isAllSelected =
+      selectedRowKeys.length === dataList.filter((item) => !item.disabled).length;
+    const newSelectedRowKeys = isAllSelected
+      ? []
+      : dataList.filter((item) => !item.disabled).map((item) => item.id);
     setSelectedRowKeys(newSelectedRowKeys);
   };
 
-  const thCheckboxStatus = () => {
-    if (selectedRowKeys.length === dataList.length) return 'checked';
-    if (selectedRowKeys.length > 0) return 'indeterminate';
+  const thCheckboxStatus = useMemo(() => {
+    if (selectedRowKeys.length === dataList.filter((item) => !item.disabled).length) {
+      return CHECKBOX.CHECKED;
+    }
+    if (selectedRowKeys.length > 0) return CHECKBOX.INDETERMINATE;
     return '';
-  };
+  }, [selectedRowKeys, dataList]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Shift') setIsShiftDown(true);
@@ -106,7 +114,11 @@ const SelectCheckboxes = () => {
             <tr key={row.id}>
               <td>
                 {!row.disabled && (
-                  <span className={`checkbox ${selectedRowKeys.includes(row.id) ? 'checked' : ''}`}>
+                  <span
+                    className={`checkbox ${
+                      selectedRowKeys.includes(row.id) ? CHECKBOX.CHECKED : ''
+                    }`}
+                  >
                     <input
                       type="checkbox"
                       value={selectedRowKeys.includes(row.id)}
