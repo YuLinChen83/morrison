@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './index.scoped.scss';
 
 const getMockData = (count) =>
@@ -24,61 +24,58 @@ const SelectCheckboxes = () => {
     setInitialDataCount(+e.target.value);
   };
 
-  const handleReloadData = useCallback(() => {
+  const handleReloadData = () => {
     setDataList(getMockData(initialDataCount));
     setSelectedRowKeys(dataList.filter((item) => item.selected).map((item) => item.id));
     setLastSelectedKey(null);
-  }, [initialDataCount]);
+  };
 
-  const handleSelect = useCallback(
-    (id) => {
-      let newSelectedRowKeys;
-      const currentSelectedIndex = dataList.findIndex((item) => item.id === id);
-      const lastSelectedIndex = dataList.findIndex((item) => item.id === lastSelectedKey);
-      const isSelected = selectedRowKeys.includes(id);
+  const handleSelect = (id) => {
+    let newSelectedRowKeys;
+    const currentSelectedIndex = dataList.findIndex((item) => item.id === id);
+    const lastSelectedIndex = dataList.findIndex((item) => item.id === lastSelectedKey);
+    const isSelected = selectedRowKeys.includes(id);
 
-      if (isShiftDown) {
-        const newSelectedKeys = [...dataList]
-          .slice(
-            Math.min(lastSelectedIndex, currentSelectedIndex),
-            Math.max(lastSelectedIndex, currentSelectedIndex) + 1
-          )
-          .filter((item) => !item.disabled)
-          .map((item) => item.id);
-        const selections = [...new Set([...selectedRowKeys, ...newSelectedKeys])];
-        newSelectedRowKeys = isSelected
-          ? selections.filter((item) => !newSelectedKeys.includes(item))
-          : selections;
-      } else {
-        newSelectedRowKeys = isSelected
-          ? selectedRowKeys.filter((key) => key !== id)
-          : [...selectedRowKeys, id];
-      }
-      setSelectedRowKeys(newSelectedRowKeys);
-      setLastSelectedKey(id);
-    },
-    [selectedRowKeys, isShiftDown, lastSelectedKey]
-  );
+    if (isShiftDown) {
+      const newSelectedKeys = [...dataList]
+        .slice(
+          Math.min(lastSelectedIndex, currentSelectedIndex),
+          Math.max(lastSelectedIndex, currentSelectedIndex) + 1
+        )
+        .filter((item) => !item.disabled)
+        .map((item) => item.id);
+      const selections = [...new Set([...selectedRowKeys, ...newSelectedKeys])];
+      newSelectedRowKeys = isSelected
+        ? selections.filter((item) => !newSelectedKeys.includes(item))
+        : selections;
+    } else {
+      newSelectedRowKeys = isSelected
+        ? selectedRowKeys.filter((key) => key !== id)
+        : [...selectedRowKeys, id];
+    }
+    setSelectedRowKeys(newSelectedRowKeys);
+    setLastSelectedKey(id);
+  };
 
-  const handleSelectAll = useCallback(() => {
+  const handleSelectAll = () => {
     const isAllSelected = selectedRowKeys.length === dataList.length;
     const newSelectedRowKeys = isAllSelected ? [] : dataList.map((item) => item.id);
     setSelectedRowKeys(newSelectedRowKeys);
-  }, [selectedRowKeys, dataList]);
+  };
 
-  const thCheckboxStatus = useMemo(() => {
+  const thCheckboxStatus = () => {
     if (selectedRowKeys.length === dataList.length) return 'checked';
     if (selectedRowKeys.length > 0) return 'indeterminate';
     return '';
-  }, [selectedRowKeys, dataList]);
+  };
 
-  const handleKeyDown = useCallback((e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Shift') setIsShiftDown(true);
-  }, []);
+  };
 
-  const handleKeyUp = useCallback((e) => {
+  const handleKeyUp = (e) => {
     if (e.key === 'Shift') setIsShiftDown(false);
-  }, []);
+  };
 
   useEffect(() => {
     document.addEventListener('keyup', handleKeyUp);
